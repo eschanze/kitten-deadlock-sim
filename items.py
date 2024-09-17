@@ -12,6 +12,7 @@ class EffectType(Enum):
 class Item:
     type: str
     name: str
+    souls: int
     ## Stats
     # Weapon
     weapon_damage: float = 0.0 # Weapon Damage as % increase
@@ -34,6 +35,7 @@ class Item:
 basic_magazine = Item(
     type="Weapon",
     name="Basic Magazine",
+    souls = 500,
     weapon_damage=(0.15+0.06),
     ammo=0.24
 )
@@ -45,13 +47,14 @@ def headshot_booster_on_hit(attacker, defender, item, current_time):
 
     if item.last_triggered is None or (current_time - item.last_triggered >= cooldown_time):
         item.last_triggered = current_time
-        print(f"[ BONUS ] Headshot Booster: +{bonus_damage} bonus damage!")
+        #print(f"[ BONUS ] Headshot Booster: +{bonus_damage} bonus damage!")
         return (EffectType.BonusFlatDamage, bonus_damage)
     return (EffectType.BonusFlatDamage, 0)
 
 headshot_booster = Item(
     type="Weapon",
     name="Headshot Booster",
+    souls=500,
     weapon_damage=0.06,
     fire_rate=0.05,
     on_hit=headshot_booster_on_hit,
@@ -62,6 +65,7 @@ headshot_booster = Item(
 high_velocity_mag = Item(
     type="Weapon",
     name="High-Velocity Mag",
+    souls=500,
     weapon_damage=(0.14+0.06)
 )
 
@@ -71,13 +75,14 @@ def hollow_point_ward_on_hit(attacker, defender, item, current_time):
     health_threshold = 0.6
 
     if attacker.health / attacker.base_health > health_threshold:
-        print(f"[ BONUS ] Hollow Point Ward: +{int(bonus_percentage * 100.0)}% weapon damage")
+        #print(f"[ BONUS ] Hollow Point Ward: +{int(bonus_percentage * 100.0)}% weapon damage")
         return (EffectType.WeaponDamageMultiplier, bonus_percentage)
     return (EffectType.WeaponDamageMultiplier, 0.0)
 
 hollow_point_ward = Item(
     type="Weapon",
     name="Hollow Point Ward",
+    souls=500,
     weapon_damage=0.06,
     on_hit=hollow_point_ward_on_hit
 )
@@ -86,6 +91,7 @@ hollow_point_ward = Item(
 rapid_rounds = Item(
     type="Weapon",
     name="Rapid Rounds",
+    souls=500,
     weapon_damage=0.06,
     fire_rate=0.09
 )
@@ -94,6 +100,7 @@ rapid_rounds = Item(
 restorative_shot = Item(
     type="Weapon",
     name="Restorative Shot",
+    souls=500,
     weapon_damage=(0.08+0.06)
 )
 
@@ -107,6 +114,7 @@ restorative_shot = Item(
 long_range = Item(
     type="Weapon",
     name="Long Range",
+    souls=1250,
     weapon_damage=(0.4+0.1),
     ammo=0.2
 )
@@ -121,6 +129,7 @@ long_range = Item(
 swift_striker = Item(
     type="Weapon",
     name="Swift Striker",
+    souls=1250,
     weapon_damage=0.1,
     fire_rate=0.22,
     ammo=0.1
@@ -138,16 +147,17 @@ def burst_fire_on_hit(attacker, defender, item, current_time):
 
     if item.last_triggered is None or (current_time - item.last_triggered >= cooldown_time):
         item.last_triggered = current_time
-        print(f"[ BONUS ] Burst Fire: +{int(fire_rate_increase * 100)}% fire rate for {buff_duration} seconds!")
+        #print(f"[ BONUS ] Burst Fire: +{int(fire_rate_increase * 100)}% fire rate for {buff_duration} seconds!")
         return (EffectType.FireRateBuff, fire_rate_increase, buff_duration)
     return (EffectType.FireRateBuff, 0, 0)
 
 burst_fire = Item(
     type="Weapon",
     name="Burst Fire",
-    on_hit=burst_fire_on_hit,
+    souls=3000,
     weapon_damage=0.14,
     fire_rate=0.12,
+    on_hit=burst_fire_on_hit,
     cooldown=8.0
 )
 
@@ -166,12 +176,13 @@ def intensifying_magazine_on_hit(attacker, defender, item, current_time):
     time_elapsed = current_time - item.last_triggered
     damage_multiplier = min(1 + (max_increase * time_elapsed / ramp_up_time), 1 + max_increase)
 
-    print(f"[ BONUS ] Increasing Magazine: +{int((damage_multiplier - 1) * 100.0)}% weapon damage")
+    #print(f"[ BONUS ] Increasing Magazine: +{int((damage_multiplier - 1) * 100.0)}% weapon damage")
     return (EffectType.WeaponDamageMultiplier, damage_multiplier - 1)
 
 intensifying_magazine = Item(
     type="Weapon",
     name="Increasing Magazine",
+    souls=3000,
     weapon_damage=(0.2 + 0.14),
     ammo=0.25,
     on_hit=intensifying_magazine_on_hit
@@ -183,13 +194,14 @@ def pristine_emblem_on_hit(attacker, defender, item, current_time):
     health_threshold = 0.5
 
     if defender.health / defender.base_health > health_threshold:
-        print(f"[ BONUS ] Pristine Emblem: +{int(bonus_percentage * 100.0)}% weapon damage")
+        #print(f"[ BONUS ] Pristine Emblem: +{int(bonus_percentage * 100.0)}% weapon damage")
         return (EffectType.WeaponDamageMultiplier, bonus_percentage)
     return (EffectType.WeaponDamageMultiplier, 0.0)
 
 pristine_emblem = Item(
     type="Weapon",
     name="Pristine Emblem",
+    souls=3000,
     weapon_damage=(0.25 + 0.14),
     on_hit=pristine_emblem_on_hit
 )

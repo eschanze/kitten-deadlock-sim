@@ -26,6 +26,7 @@ class Hero:
 class CombatStats:
     total_damage_dealt: float = 0.0
     total_attacks: int = 0
+    dps: float = 0.0
 
 @dataclass
 class ActiveBuff:
@@ -48,7 +49,7 @@ class CombatSimulator:
 
     def attack(self):
         self.attacker.current_ammo -= 1
-        print(f"[ {self.current_time:>{5}.2f} ][ ATTACK ] {self.attacker.name} -> {self.defender.name} ( {self.attacker.current_ammo}/{self.attacker.ammo} )")
+        #print(f"[ {self.current_time:>{5}.2f} ][ ATTACK ] {self.attacker.name} -> {self.defender.name} ( {self.attacker.current_ammo}/{self.attacker.ammo} )")
         damage_time = self.current_time + 0.0 # Travel time
         self.event_queue.schedule_event(Event(damage_time, self.on_damage))
         if self.attacker.current_ammo > 0:
@@ -72,15 +73,15 @@ class CombatSimulator:
                     self.apply_buff(self.attacker, effect)
 
         damage = (self.attacker.base_bullet_damage * total_multiplier) + flat_damage
-        bonus_fire_rate = ((self.get_current_fire_rate(attacker) / self.attacker.base_fire_rate) - 1) * 100.0
-        print(f"[ MULTIPLIER ] Additional Weapon Damage: {total_multiplier:.2f} ( Total: +{int((total_multiplier - 1) * 100.0)}% )")
-        print(f"[ MULTIPLIER ] Total Fire Rate: +{int(round(bonus_fire_rate))}%")
+        bonus_fire_rate = ((self.get_current_fire_rate(self.attacker) / self.attacker.base_fire_rate) - 1) * 100.0
+        #print(f"[ MULTIPLIER ] Additional Weapon Damage: {total_multiplier:.2f} ( Total: +{int((total_multiplier - 1) * 100.0)}% )")
+        #print(f"[ MULTIPLIER ] Total Fire Rate: +{int(round(bonus_fire_rate))}%")
 
         previous_health = self.defender.health
         self.defender.health = max(0, self.defender.health - damage)
         self.stats.total_damage_dealt += damage
         self.stats.total_attacks += 1
-        print(f"[ {self.current_time:>{5}.2f} ][ DAMAGE ] {self.defender.name} takes {damage:.2f} ( {previous_health:.2f} -> {self.defender.health:.2f} )")
+        #print(f"[ {self.current_time:>{5}.2f} ][ DAMAGE ] {self.defender.name} takes {damage:.2f} ( {previous_health:.2f} -> {self.defender.health:.2f} )")
 
         for item in self.attacker.build:
             if item.on_damage:
@@ -95,12 +96,12 @@ class CombatSimulator:
         if value > 0 and duration > 0:
             end_time = self.current_time + duration
             self.active_buffs.append(ActiveBuff(hero, effect_type, value, end_time))
-            print(f"[ BUFF ] Applied {effect_type.value} to {hero.name}: +{value:.2f} for {duration:.2f} seconds")
+            #print(f"[ BUFF ] Applied {effect_type.value} to {hero.name}: +{value:.2f} for {duration:.2f} seconds")
             self.event_queue.schedule_event(Event(end_time, lambda: self.remove_buff(hero, effect_type, value)))
 
     def remove_buff(self, hero: 'Hero', effect_type: EffectType, value: float):
         self.active_buffs = [buff for buff in self.active_buffs if not (buff.hero == hero and buff.effect_type == effect_type and buff.value == value)]
-        print(f"[ {self.current_time:>{5}.2f} ][ BUFF ] Removed {effect_type.value} from {hero.name}: -{value:.2f}")
+        #print(f"[ {self.current_time:>{5}.2f} ][ BUFF ] Removed {effect_type.value} from {hero.name}: -{value:.2f}")
 
     def get_current_fire_rate(self, hero: 'Hero') -> float:
         base_fire_rate = hero.base_fire_rate
@@ -110,13 +111,13 @@ class CombatSimulator:
         return base_fire_rate * (1 + item_fire_rate_bonus + active_fire_rate_buffs)
 
     def end_combat(self):
-        print(f"[ {self.current_time:.2f} ][ END ] {self.defender.name} died.")
+        #print(f"[ {self.current_time:.2f} ][ END ] {self.defender.name} died.")
         self.calculate_dps()
 
     def calculate_dps(self):
         if self.stats.total_attacks > 0 and self.current_time > 0:
-            dps = self.stats.total_damage_dealt / self.current_time
-            print(f"[ RESULT ] Total DPS: {dps:.2f} ( {self.stats.total_damage_dealt:.2f} over {self.current_time:.2f} seconds )")
+            self.stats.dps = self.stats.total_damage_dealt / self.current_time
+            #print(f"[ RESULT ] Total DPS: {self.stats.dps:.2f} ( {self.stats.total_damage_dealt:.2f} over {self.current_time:.2f} seconds )")
 
     def run_simulation(self):
         self.schedule_attack(0.0)
@@ -129,14 +130,3 @@ class CombatSimulator:
             if self.defender.health <= 0:
                 self.end_combat()
                 break
-
-# Example: Vindicta vs Abrams with buffed HP
-hp = 550
-damage = 13
-fire_rate = 5.26
-ammo = 22
-attacker = Hero("Vindicta", hp, damage, fire_rate, ammo, build=[])
-defender = Hero("Abrams", 5000, 0, 1, 1)
-
-simulator = CombatSimulator(attacker, defender)
-simulator.run_simulation()
