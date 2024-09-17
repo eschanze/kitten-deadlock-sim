@@ -34,6 +34,7 @@ class Item:
     name: str
     category: Category
     tier: int
+    souls: int
 
     # stats, as fractional increases (0.2 => +20%)
     weapon_damage: float = 0.0
@@ -64,6 +65,7 @@ basic_magazine = Item(
     name="Basic Magazine",
     category=Category.WEAPON,
     tier=1,
+    souls=500,
     weapon_damage=0.15,
     ammo=0.24,
 )
@@ -81,6 +83,7 @@ headshot_booster = Item(
     name="Headshot Booster",
     category=Category.WEAPON,
     tier=1,
+    souls=500,
     fire_rate=0.05,
     on_hit=headshot_booster_on_hit,
     cooldown=7.0,
@@ -91,6 +94,7 @@ high_velocity_mag = Item(
     name="High-Velocity Mag",
     category=Category.WEAPON,
     tier=1,
+    souls=500,
     weapon_damage=0.14,
 )
 
@@ -106,6 +110,7 @@ hollow_point_ward = Item(
     name="Hollow Point Ward",
     category=Category.WEAPON,
     tier=1,
+    souls=500,
     on_hit=hollow_point_ward_on_hit,
 )
 
@@ -114,6 +119,7 @@ rapid_rounds = Item(
     name="Rapid Rounds",
     category=Category.WEAPON,
     tier=1,
+    souls=500,
     fire_rate=0.09,
 )
 
@@ -122,6 +128,7 @@ restorative_shot = Item(
     name="Restorative Shot",
     category=Category.WEAPON,
     tier=1,
+    souls=500,
     weapon_damage=0.08,
 )
 
@@ -132,6 +139,7 @@ long_range = Item(
     name="Long Range",
     category=Category.WEAPON,
     tier=2,
+    souls=1250,
     weapon_damage=0.4,
     ammo=0.2,
 )
@@ -141,6 +149,7 @@ swift_striker = Item(
     name="Swift Striker",
     category=Category.WEAPON,
     tier=2,
+    souls=1250,
     fire_rate=0.22,
     ammo=0.1,
 )
@@ -160,6 +169,7 @@ burst_fire = Item(
     name="Burst Fire",
     category=Category.WEAPON,
     tier=3,
+    souls=3000,
     fire_rate=0.12,
     on_hit=burst_fire_on_hit,
     cooldown=8.0,
@@ -184,6 +194,7 @@ intensifying_magazine = Item(
     name="Intensifying Magazine",
     category=Category.WEAPON,
     tier=3,
+    souls=3000,
     weapon_damage=0.2,
     ammo=0.25,
     on_hit=intensifying_magazine_on_hit,
@@ -201,6 +212,14 @@ pristine_emblem = Item(
     name="Pristine Emblem",
     category=Category.WEAPON,
     tier=3,
+    souls=3000,
     weapon_damage=0.25,
     on_hit=pristine_emblem_on_hit,
 )
+
+
+ALL_ITEMS = [
+    basic_magazine, headshot_booster, high_velocity_mag, hollow_point_ward, rapid_rounds, restorative_shot,
+    long_range, swift_striker,
+    burst_fire, intensifying_magazine, pristine_emblem,
+]

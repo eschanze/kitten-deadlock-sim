@@ -52,7 +52,7 @@ class CombatStats:
 
 
 class CombatSimulator:
-    def __init__(self, attacker: Hero, defender: Hero) -> None:
+    def __init__(self, attacker: Hero, defender: Hero, verbose: bool = True) -> None:
         self.attacker = attacker
         self.defender = defender
         self.event_queue = EventQueue()
@@ -60,9 +60,12 @@ class CombatSimulator:
         self.stats = CombatStats()
         # the fight lasts a single magazine for now
         self.running = True
+        # per-bullet logging dominates runtime in batch runs, so it can be switched off
+        self.verbose = verbose
 
     def log(self, message: str, prefix: str = "*") -> None:
-        print(f"[{prefix}] {self.current_time:>5.2f}s => {message}")
+        if self.verbose:
+            print(f"[{prefix}] {self.current_time:>5.2f}s => {message}")
 
     ## Events
 
