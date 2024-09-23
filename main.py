@@ -1,4 +1,5 @@
 import combinations
+import replace
 from heroes import target_dummy, vindicta
 from items import basic_magazine, intensifying_magazine, rapid_rounds, sharpshooter, swift_striker
 from sim import CombatSimulator
@@ -16,6 +17,7 @@ def simulate_sample_build() -> None:
 MENU_OPTIONS = {
     "1": ("simulate sample build", simulate_sample_build),
     "2": ("rank builds", combinations.run),
+    "3": ("find best item replacement", replace.run),
 }
 
 
