@@ -13,6 +13,7 @@ class EffectType(Enum):
     WEAPON_DAMAGE = "weapon damage"
     FLAT_DAMAGE = "flat damage"
     FIRE_RATE = "fire rate"
+    CURRENT_AMMO = "current ammo"
 
 
 class Effect(NamedTuple):
@@ -27,6 +28,9 @@ class Category(Enum):
 
 # weapon items grant extra weapon damage depending on their tier
 WEAPON_TIER_BONUS = {1: 0.06, 2: 0.10, 3: 0.14, 4: 0.18}
+
+# long range items only work against targets at least this far away (meters)
+LONG_RANGE_DISTANCE = 15
 
 
 @dataclass(eq=False)
@@ -46,6 +50,9 @@ class Item:
     on_hit: Optional[Callable[[Hero, Hero, Item, float], Optional[Effect]]] = None
     cooldown: float = 0.0  # seconds
     last_triggered: Optional[float] = None
+
+    # active abilities, assumed to be used right as the fight starts
+    active: Optional[Callable[[], list[Effect]]] = None
 
     @property
     def total_weapon_damage(self) -> float:
@@ -134,14 +141,22 @@ restorative_shot = Item(
 
 ## Tier 2
 
-# Long Range: the +40% weapon damage is only granted at range, but we always assume long range for now
+
+
+# Long Range: +40% weapon damage against distant targets
+def long_range_on_hit(attacker: Hero, defender: Hero, item: Item, current_time: float) -> Optional[Effect]:
+    if attacker.distance_to_target >= LONG_RANGE_DISTANCE:
+        return Effect(EffectType.WEAPON_DAMAGE, 0.4)
+    return None
+
+
 long_range = Item(
     name="Long Range",
     category=Category.WEAPON,
     tier=2,
     souls=1250,
-    weapon_damage=0.4,
     ammo=0.2,
+    on_hit=long_range_on_hit,
 )
 
 # Swift Striker
@@ -218,8 +233,65 @@ pristine_emblem = Item(
 )
 
 
+# Sharpshooter: +70% weapon damage against distant targets
+def sharpshooter_on_hit(attacker: Hero, defender: Hero, item: Item, current_time: float) -> Optional[Effect]:
+    if attacker.distance_to_target >= LONG_RANGE_DISTANCE:
+        return Effect(EffectType.WEAPON_DAMAGE, 0.7)
+    return None
+
+
+sharpshooter = Item(
+    name="Sharpshooter",
+    category=Category.WEAPON,
+    tier=3,
+    souls=4250,
+    ammo=0.2,
+    on_hit=sharpshooter_on_hit,
+)
+
+# Warp Stone
+warp_stone = Item(
+    name="Warp Stone",
+    category=Category.WEAPON,
+    tier=3,
+    souls=3000,
+    weapon_damage=0.2,
+)
+
+## Tier 4
+
+# Glass Cannon
+glass_cannon = Item(
+    name="Glass Cannon",
+    category=Category.WEAPON,
+    tier=4,
+    souls=6200,
+    weapon_damage=0.7,
+    fire_rate=0.1,
+)
+
+
+# Vampiric Burst: +40% fire rate and +50% current ammo for 4.5 seconds
+def vampiric_burst_active() -> list[Effect]:
+    return [
+        Effect(EffectType.FIRE_RATE, 0.4, duration=4.5),
+        Effect(EffectType.CURRENT_AMMO, 0.5, duration=4.5),
+    ]
+
+
+vampiric_burst = Item(
+    name="Vampiric Burst",
+    category=Category.WEAPON,
+    tier=4,
+    souls=6200,
+    weapon_damage=0.25,
+    active=vampiric_burst_active,
+)
+
+
 ALL_ITEMS = [
     basic_magazine, headshot_booster, high_velocity_mag, hollow_point_ward, rapid_rounds, restorative_shot,
     long_range, swift_striker,
-    burst_fire, intensifying_magazine, pristine_emblem,
+    burst_fire, intensifying_magazine, pristine_emblem, sharpshooter, warp_stone,
+    glass_cannon, vampiric_burst,
 ]

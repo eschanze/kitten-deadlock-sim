@@ -27,6 +27,7 @@ class Hero:
         self.ammo = round(self.base_ammo * (1 + sum(item.ammo for item in self.build)))
         self.current_ammo = self.ammo
         self.active_buffs: list[Buff] = []
+        self.distance_to_target = 0.0  # meters
 
     def apply_buff(self, effect: Effect, current_time: float) -> Optional[Buff]:
         if effect.value <= 0 or effect.duration <= 0:
@@ -52,7 +53,7 @@ class CombatStats:
 
 
 class CombatSimulator:
-    def __init__(self, attacker: Hero, defender: Hero, verbose: bool = True) -> None:
+    def __init__(self, attacker: Hero, defender: Hero, distance_to_target: float = 30.0, verbose: bool = True) -> None:
         self.attacker = attacker
         self.defender = defender
         self.event_queue = EventQueue()
@@ -62,6 +63,8 @@ class CombatSimulator:
         self.running = True
         # per-bullet logging dominates runtime in batch runs, so it can be switched off
         self.verbose = verbose
+
+        self.attacker.distance_to_target = distance_to_target
 
     def log(self, message: str, prefix: str = "*") -> None:
         if self.verbose:
@@ -127,6 +130,7 @@ class CombatSimulator:
     ## Simulation
 
     def run(self) -> CombatStats:
+        self.apply_pre_combat_effects()
         self.schedule_attack(0.0)
 
         while self.running and not self.event_queue.is_empty():
@@ -140,6 +144,17 @@ class CombatSimulator:
 
         self.calculate_dps()
         return self.stats
+
+    def apply_pre_combat_effects(self) -> None:
+        for item in self.attacker.build:
+            if not item.active:
+                continue
+            for effect in item.active():
+                if effect.type == EffectType.FIRE_RATE:
+                    self.schedule_buff(self.attacker, effect)
+                elif effect.type == EffectType.CURRENT_AMMO:
+                    # only the magazine in hand gets the extra bullets
+                    self.attacker.current_ammo = round(self.attacker.current_ammo * (1 + effect.value))
 
     def calculate_dps(self) -> None:
         if self.stats.total_attacks == 0 or self.current_time <= 0:
