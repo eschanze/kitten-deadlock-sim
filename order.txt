@@ -1,0 +1,8 @@
+Hollow Point Ward -> Rapid Rounds -> Basic Magazine
+Long Range -> Swift Striker -> Sharpshooter
+Vender Hollow Point Ward por Intensifying Magazine
+
+
+- Hacer que las activas retornen una array de efectos. 
+- Mover apply_buff y remove_buff a Hero. (¿Mantener el apply y remove en CombatSimulator para poder callear schedule?)
+- Que los efectos tengan nombre y sean únicos

@@ -12,10 +12,13 @@ class Hero:
     base_ammo: int
     build: list[Item] = field(default_factory=list)
     active_buffs: list = field(default_factory=list)
+    distance_to_target: float = 30 # meters 
 
     def __post_init__(self):
         # Apply base stats
         self.health = self.base_health + sum(item.health for item in self.build)
+        for item in self.build:
+            print(f"{item.name} gives {item.weapon_damage}")
         self.weapon_damage_multiplier = sum(item.weapon_damage for item in self.build)
         self.bullet_damage = self.base_bullet_damage
         self.fire_rate = self.base_fire_rate * (1 + sum(item.fire_rate for item in self.build))
@@ -30,13 +33,13 @@ class CombatStats:
 
 @dataclass
 class ActiveBuff:
-    hero: 'Hero'
+    hero: "Hero"
     effect_type: EffectType
     value: float
     end_time: float
 
 class CombatSimulator:
-    def __init__(self, attacker: 'Hero', defender: 'Hero'):
+    def __init__(self, attacker: Hero, defender: Hero):
         self.attacker = attacker
         self.defender = defender
         self.event_queue = EventQueue()
@@ -49,7 +52,7 @@ class CombatSimulator:
 
     def attack(self):
         self.attacker.current_ammo -= 1
-        #print(f"[ {self.current_time:>{5}.2f} ][ ATTACK ] {self.attacker.name} -> {self.defender.name} ( {self.attacker.current_ammo}/{self.attacker.ammo} )")
+        print(f"[ {self.current_time:>{5}.2f} ][ ATTACK ] {self.attacker.name} -> {self.defender.name} ( {self.attacker.current_ammo}/{self.attacker.ammo} )")
         damage_time = self.current_time + 0.0 # Travel time
         self.event_queue.schedule_event(Event(damage_time, self.on_damage))
         if self.attacker.current_ammo > 0:
@@ -72,16 +75,26 @@ class CombatSimulator:
                 elif effect[0] == EffectType.FireRateBuff:
                     self.apply_buff(self.attacker, effect)
 
+        # Hard-coded distance values, for now
+        min_range = 22
+        max_range = 58
         damage = (self.attacker.base_bullet_damage * total_multiplier) + flat_damage
+        min_damage = damage * 0.1
+        # Hard-coded Sharpshooter effect, too
+        if sharpshooter in self.attacker.build:
+            min_range += 15
+            max_range += 15
+        #slope = round((damage - min_damage) / (max_range - min_range), 3)
+        #damage = (-slope * (self.attacker.distance_to_target - min_range)) + damage
         bonus_fire_rate = ((self.get_current_fire_rate(self.attacker) / self.attacker.base_fire_rate) - 1) * 100.0
-        #print(f"[ MULTIPLIER ] Additional Weapon Damage: {total_multiplier:.2f} ( Total: +{int((total_multiplier - 1) * 100.0)}% )")
-        #print(f"[ MULTIPLIER ] Total Fire Rate: +{int(round(bonus_fire_rate))}%")
+        print(f"[ MULTIPLIER ] Additional Weapon Damage: {total_multiplier:.2f} ( Total: +{int((total_multiplier - 1) * 100.0)}% )")
+        print(f"[ MULTIPLIER ] Total Fire Rate: +{int(round(bonus_fire_rate))}%")
 
         previous_health = self.defender.health
         self.defender.health = max(0, self.defender.health - damage)
         self.stats.total_damage_dealt += damage
         self.stats.total_attacks += 1
-        #print(f"[ {self.current_time:>{5}.2f} ][ DAMAGE ] {self.defender.name} takes {damage:.2f} ( {previous_health:.2f} -> {self.defender.health:.2f} )")
+        print(f"[ {self.current_time:>{5}.2f} ][ DAMAGE ] {self.defender.name} takes {damage:.2f} ( {previous_health:.2f} -> {self.defender.health:.2f} )")
 
         for item in self.attacker.build:
             if item.on_damage:
@@ -92,16 +105,15 @@ class CombatSimulator:
 
     def apply_buff(self, hero: 'Hero', effect: Tuple[EffectType, float, float]):
         effect_type, value, duration = effect
-        #existing_buff = next((buff for buff in self.active_buffs if buff.hero == hero and buff.effect_type == effect_type and buff.source == source), None)
         if value > 0 and duration > 0:
             end_time = self.current_time + duration
             self.active_buffs.append(ActiveBuff(hero, effect_type, value, end_time))
-            #print(f"[ BUFF ] Applied {effect_type.value} to {hero.name}: +{value:.2f} for {duration:.2f} seconds")
+            print(f"[ BUFF ] Applied {effect_type.value} to {hero.name}: +{value:.2f} for {duration:.2f} seconds")
             self.event_queue.schedule_event(Event(end_time, lambda: self.remove_buff(hero, effect_type, value)))
 
     def remove_buff(self, hero: 'Hero', effect_type: EffectType, value: float):
         self.active_buffs = [buff for buff in self.active_buffs if not (buff.hero == hero and buff.effect_type == effect_type and buff.value == value)]
-        #print(f"[ {self.current_time:>{5}.2f} ][ BUFF ] Removed {effect_type.value} from {hero.name}: -{value:.2f}")
+        print(f"[ {self.current_time:>{5}.2f} ][ BUFF ] Removed {effect_type.value} from {hero.name}: -{value:.2f}")
 
     def get_current_fire_rate(self, hero: 'Hero') -> float:
         base_fire_rate = hero.base_fire_rate
@@ -111,15 +123,23 @@ class CombatSimulator:
         return base_fire_rate * (1 + item_fire_rate_bonus + active_fire_rate_buffs)
 
     def end_combat(self):
-        #print(f"[ {self.current_time:.2f} ][ END ] {self.defender.name} died.")
+        print(f"[ {self.current_time:.2f} ][ END ] {self.defender.name} died.")
         self.calculate_dps()
 
     def calculate_dps(self):
         if self.stats.total_attacks > 0 and self.current_time > 0:
             self.stats.dps = self.stats.total_damage_dealt / self.current_time
-            #print(f"[ RESULT ] Total DPS: {self.stats.dps:.2f} ( {self.stats.total_damage_dealt:.2f} over {self.current_time:.2f} seconds )")
+            print(f"[ RESULT ] Total DPS: {self.stats.dps:.2f} ( {self.stats.total_damage_dealt:.2f} over {self.current_time:.2f} seconds )")
 
     def run_simulation(self):
+        # Check for actives to be used before combat
+        if vampiric_burst in self.attacker.build:
+            effects = vampiric_burst.active(self.attacker, self.defender, vampiric_burst, self.current_time)
+            for effect in effects:
+                if effect[0] == EffectType.FireRateBuff:
+                    self.apply_buff(self.attacker, effect)
+                elif effect[0] == EffectType.CurrentAmmoBuff:
+                    self.attacker.current_ammo = int(round(self.attacker.current_ammo * (1 + effect[1])))
         self.schedule_attack(0.0)
 
         while not self.event_queue.is_empty():
