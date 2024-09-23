@@ -15,7 +15,7 @@ def simulate_sample_build() -> None:
 
 MENU_OPTIONS = {
     "1": ("simulate sample build", simulate_sample_build),
-    "2": ("find best build", combinations.run),
+    "2": ("rank builds", combinations.run),
 }
 
 
