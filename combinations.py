@@ -8,6 +8,7 @@ from sim import CombatSimulator
 BUILD_SIZE = 5
 MAX_COST = 10000  # souls
 MAX_STARTER_ITEMS = 3
+DISTANCE = 35  # meters
 TARGET_HEALTH = 3000
 
 # items already owned, the search only fills the remaining slots
@@ -39,7 +40,7 @@ def is_valid_build(build: list[Item]) -> bool:
 
 
 def simulate(build: list[Item]) -> BuildResult:
-    simulator = CombatSimulator(vindicta(build), target_dummy(TARGET_HEALTH), verbose=False)
+    simulator = CombatSimulator(vindicta(build), target_dummy(TARGET_HEALTH), distance_to_target=DISTANCE, verbose=False)
     stats = simulator.run()
     return BuildResult(build, sum(item.souls for item in build), stats.dps, stats.total_damage)
 
