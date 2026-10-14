@@ -6,7 +6,7 @@ from items import ALL_ITEMS, Item, long_range, sharpshooter
 from sim import CombatSimulator
 
 BUILD_SIZE = 5
-MAX_COST = 10000  # souls
+MAX_COST = 8000  # souls
 MAX_STARTER_ITEMS = 3
 DISTANCE = 35  # meters
 TARGET_HEALTH = 3000
@@ -36,7 +36,10 @@ def is_valid_build(build: list[Item]) -> bool:
     if any(first in build and second in build for first, second in INCOMPATIBLE_PAIRS):
         return False
     starter_items = sum(1 for item in build if item.tier == 1)
-    return starter_items <= MAX_STARTER_ITEMS
+    if starter_items > MAX_STARTER_ITEMS:
+        return False
+    # filter on cost before simulating, otherwise most of the simulations get thrown away
+    return sum(item.souls for item in build) <= MAX_COST
 
 
 def simulate(build: list[Item]) -> BuildResult:
@@ -50,7 +53,7 @@ def run() -> None:
     builds = [CURRENT_BUILD + list(combination) for combination in itertools.combinations(candidates, BUILD_SIZE)]
     builds = [build for build in builds if is_valid_build(build)]
 
-    results = [result for result in map(simulate, builds) if result.cost <= MAX_COST]
+    results = [simulate(build) for build in builds]
     # worst first, so the best builds end up at the bottom of the terminal
     results.sort(key=lambda result: result.dps)
 
