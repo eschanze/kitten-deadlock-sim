@@ -6,13 +6,15 @@ hp = 550
 damage = 5.5
 fire_rate = 11.1
 ammo = 52
+reload_time = 2.0 # seconds (2024 wiki value, verify for the current patch)
 
 current_build = []
 
 all_items = [basic_magazine, headshot_booster, high_velocity_mag, hollow_point_ward, rapid_rounds, restorative_shot,
         long_range, swift_striker,
         burst_fire, intensifying_magazine, pristine_emblem, warp_stone, sharpshooter,
-        glass_cannon, vampiric_burst]
+        crippling_headshot, glass_cannon, vampiric_burst,
+        combat_barrier]
 
 incompatible_pairs = [
     (long_range, sharpshooter)
@@ -37,14 +39,14 @@ all_builds = []
 for b in possible_builds:
     build_names = [i.name for i in b]
     total_cost = sum([i.souls for i in b])
-    attacker = Hero("Vindicta", hp, damage, fire_rate, ammo, build=b)
-    defender = Hero("Abrams", 3000, 0, 1, 1)
+    attacker = Hero("Vindicta", hp, damage, fire_rate, ammo, 22, 58, build=b, base_reload_time=reload_time)
+    defender = Hero("Abrams", 3000, 0, 1, 1, 1, 1)
 
-    simulator = CombatSimulator(attacker, defender)
+    simulator = CombatSimulator(attacker, defender, distance_to_target=35)
     simulator.run_simulation()
     value = simulator.stats.dps / total_cost
 
-    if total_cost <= 10000:
+    if total_cost <= 8000:
         all_builds.append({
             'build': build_names,
             'total_cost': total_cost,

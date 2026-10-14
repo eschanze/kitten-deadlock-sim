@@ -31,6 +31,8 @@ class Item:
     cooldown: float = 0.0  # Cooldown duration for passive effects
     last_triggered: float = field(default=None)  # Last time the effect was triggered
 
+### Weapon Items
+
 ## Tier 1 items
 
 # Basic Magazine
@@ -177,7 +179,7 @@ burst_fire = Item(
 
 # Intensifying Magazine: increases damage by up to 75% over 3 seconds
 def intensifying_magazine_on_hit(attacker, defender, item, current_time):
-    max_increase = 0.75
+    max_increase = 0.6
     ramp_up_time = 3.0
 
     if item.last_triggered is None:
@@ -249,6 +251,14 @@ warp_stone = Item(
 
 ## Tier 4 items
 
+# Crippling Headshot
+crippling_headshot = Item(
+    type="Weapon",
+    name="Crippling Headshot",
+    souls=6200,
+    weapon_damage=(0.2+0.18)
+)
+
 # Glass Cannon
 glass_cannon = Item(
     type="Weapon",
@@ -272,4 +282,17 @@ vampiric_burst = Item(
     souls=6200,
     weapon_damage=(0.25+0.18),
     active=vampiric_burst_active
+)
+
+### Vitality Items
+
+## Tier 2 items
+
+# Combat Barrier
+combat_barrier = Item(
+    type="Vitality",
+    name="Combat Barrier",
+    souls=1250,
+    weapon_damage=0.28,
+    fire_rate=0.08
 )

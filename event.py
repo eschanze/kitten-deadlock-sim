@@ -1,6 +1,7 @@
 import heapq
+import itertools
 from dataclasses import dataclass
-from typing import List, Callable
+from typing import List, Tuple, Callable
 
 @dataclass
 class Event:
@@ -12,13 +13,15 @@ class Event:
 
 class EventQueue:
     def __init__(self):
-        self.events: List[Event] = []
+        self.events: List[Tuple[float, int, Event]] = []
+        # tie-breaker so events at the same time pop in the order they were scheduled
+        self.sequence = itertools.count()
 
     def schedule_event(self, event: Event):
-        heapq.heappush(self.events, event)
+        heapq.heappush(self.events, (event.time, next(self.sequence), event))
 
     def next_event(self) -> Event:
-        return heapq.heappop(self.events)
+        return heapq.heappop(self.events)[2]
 
     def is_empty(self):
         return len(self.events) == 0

@@ -5,19 +5,21 @@ hp = 550
 damage = 13
 fire_rate = 5.26 
 ammo = 22
+reload_time = 2.0 # seconds
 
 current_build = [basic_magazine, high_velocity_mag, hollow_point_ward, long_range, swift_striker, intensifying_magazine]
 
 all_items = [basic_magazine, headshot_booster, high_velocity_mag, hollow_point_ward, rapid_rounds, restorative_shot,
         long_range, swift_striker,
-        burst_fire, intensifying_magazine, pristine_emblem, warp_stone,
-        glass_cannon, vampiric_burst]
+        burst_fire, intensifying_magazine, pristine_emblem, warp_stone, sharpshooter,
+        crippling_headshot, glass_cannon, vampiric_burst,
+        combat_barrier]
 
 possible_items = [item for item in all_items if item not in current_build]
 
 def simulate_build(build):
-    attacker = Hero("Vindicta", hp, damage, fire_rate, ammo, build=build)
-    defender = Hero("Abrams", 5000, 0, 1, 1)
+    attacker = Hero("Vindicta", hp, damage, fire_rate, ammo, 22, 58, build=build, base_reload_time=reload_time)
+    defender = Hero("Abrams", 5000, 0, 1, 1, 1, 1)
     simulator = CombatSimulator(attacker, defender)
     simulator.run_simulation()
     return simulator.stats
