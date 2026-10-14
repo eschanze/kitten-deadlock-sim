@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from math import prod
 from typing import Optional
 
 from event import Event, EventQueue
@@ -26,6 +27,7 @@ class Hero:
     max_range: float  # meters, falloff bottoms out here
     base_reload_time: float = 0.0  # seconds
     build: list[Item] = field(default_factory=list)
+    bullet_resist_sources: list[float] = field(default_factory=list)  # negative values reduce resist
 
     def __post_init__(self) -> None:
         self.health = self.base_health + sum(item.health for item in self.build)
@@ -34,6 +36,15 @@ class Hero:
         self.current_ammo = self.ammo
         self.active_buffs: list[Buff] = []
         self.distance_to_target = 0.0  # meters
+
+    def bullet_resist(self) -> float:
+        # sources stack multiplicatively, and reductions are stacked the same way then subtracted
+        # e.g. [0.3, 0.2] => 1 - (0.7 * 0.8) => 44% resist
+        resists = [source for source in self.bullet_resist_sources if source >= 0]
+        reductions = [-source for source in self.bullet_resist_sources if source < 0]
+        total_resist = 1 - prod(1 - resist for resist in resists)
+        total_reduction = 1 - prod(1 - reduction for reduction in reductions)
+        return total_resist - total_reduction
 
     def apply_buff(self, effect: Effect, current_time: float) -> Optional[Buff]:
         if effect.value <= 0 or effect.duration <= 0:
@@ -128,6 +139,7 @@ class CombatSimulator:
                 self.schedule_buff(self.attacker, effect)
 
         damage = self.falloff_damage(weapon_damage, flat_damage)
+        damage *= 1 - self.defender.bullet_resist()
 
         fire_rate_bonus = self.attacker.current_fire_rate() / self.attacker.base_fire_rate - 1
         self.log(f"bonus => +{(weapon_damage - 1) * 100:.0f}% weapon damage, +{fire_rate_bonus * 100:.0f}% fire rate")
@@ -187,6 +199,8 @@ class CombatSimulator:
 
     def apply_pre_combat_effects(self) -> None:
         for item in self.attacker.build:
+            if item.bullet_resist_reduction:
+                self.defender.bullet_resist_sources.append(-item.bullet_resist_reduction)
             if not item.active:
                 continue
             for effect in item.active():

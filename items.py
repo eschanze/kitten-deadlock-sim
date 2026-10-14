@@ -24,6 +24,7 @@ class Effect(NamedTuple):
 
 class Category(Enum):
     WEAPON = "weapon"
+    VITALITY = "vitality"
 
 
 # weapon items grant extra weapon damage depending on their tier
@@ -45,6 +46,7 @@ class Item:
     fire_rate: float = 0.0
     ammo: float = 0.0
     health: float = 0.0
+    bullet_resist_reduction: float = 0.0  # applied to the enemy
 
     # conditional effects, checked on every bullet
     on_hit: Optional[Callable[[Hero, Hero, Item, float], Optional[Effect]]] = None
@@ -260,6 +262,16 @@ warp_stone = Item(
 
 ## Tier 4
 
+# Crippling Headshot
+crippling_headshot = Item(
+    name="Crippling Headshot",
+    category=Category.WEAPON,
+    tier=4,
+    souls=6200,
+    weapon_damage=0.2,
+    bullet_resist_reduction=0.24,
+)
+
 # Glass Cannon
 glass_cannon = Item(
     name="Glass Cannon",
@@ -288,10 +300,25 @@ vampiric_burst = Item(
     active=vampiric_burst_active,
 )
 
+### Vitality items
+
+## Tier 2
+
+# Combat Barrier
+combat_barrier = Item(
+    name="Combat Barrier",
+    category=Category.VITALITY,
+    tier=2,
+    souls=1250,
+    weapon_damage=0.28,
+    fire_rate=0.08,
+)
+
 
 ALL_ITEMS = [
     basic_magazine, headshot_booster, high_velocity_mag, hollow_point_ward, rapid_rounds, restorative_shot,
     long_range, swift_striker,
     burst_fire, intensifying_magazine, pristine_emblem, sharpshooter, warp_stone,
-    glass_cannon, vampiric_burst,
+    crippling_headshot, glass_cannon, vampiric_burst,
+    combat_barrier,
 ]
