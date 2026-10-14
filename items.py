@@ -193,9 +193,9 @@ burst_fire = Item(
 )
 
 
-# Intensifying Magazine: weapon damage ramps up to +75% over 3 seconds of continuous fire
+# Intensifying Magazine: weapon damage ramps up to +60% over 3 seconds of continuous fire
 def intensifying_magazine_on_hit(attacker: Hero, defender: Hero, item: Item, current_time: float) -> Optional[Effect]:
-    max_bonus = 0.75
+    max_bonus = 0.6
     ramp_up_time = 3.0
 
     # last_triggered marks when the ramp up started
