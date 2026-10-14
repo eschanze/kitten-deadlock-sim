@@ -13,6 +13,7 @@ def vindicta(build: Optional[list[Item]] = None) -> Hero:
         base_ammo=22,
         min_range=22,
         max_range=58,
+        base_reload_time=2.0,
         build=build or [],
     )
 

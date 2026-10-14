@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from event import Event, EventQueue
-from items import Effect, EffectType, Item
+from items import Effect, EffectType, Item, intensifying_magazine
 
 # past max range, bullets keep this fraction of their full damage
 MIN_FALLOFF_DAMAGE = 0.1
@@ -24,6 +24,7 @@ class Hero:
     base_ammo: int
     min_range: float  # meters, falloff starts here
     max_range: float  # meters, falloff bottoms out here
+    base_reload_time: float = 0.0  # seconds
     build: list[Item] = field(default_factory=list)
 
     def __post_init__(self) -> None:
@@ -58,14 +59,21 @@ class CombatStats:
 
 
 class CombatSimulator:
-    def __init__(self, attacker: Hero, defender: Hero, distance_to_target: float = 30.0, verbose: bool = True) -> None:
+    def __init__(
+        self,
+        attacker: Hero,
+        defender: Hero,
+        distance_to_target: float = 30.0,
+        fight_duration: float = 10.0,
+        verbose: bool = True,
+    ) -> None:
         self.attacker = attacker
         self.defender = defender
         self.event_queue = EventQueue()
         self.current_time = 0.0
         self.stats = CombatStats()
-        # the fight lasts a single magazine for now
-        self.running = True
+        # fixed window (instead of a single magazine) so reloads cost time and big-ammo builds are compared fairly
+        self.fight_duration = fight_duration
         # per-bullet logging dominates runtime in batch runs, so it can be switched off
         self.verbose = verbose
 
@@ -94,7 +102,15 @@ class CombatSimulator:
         if self.attacker.current_ammo > 0:
             self.schedule_attack(self.current_time + 1 / self.attacker.current_fire_rate())
         else:
-            self.event_queue.schedule(Event(self.current_time, self.stop))
+            self.event_queue.schedule(Event(self.current_time + self.attacker.base_reload_time, self.reload))
+
+    def reload(self) -> None:
+        self.attacker.current_ammo = self.attacker.ammo
+        self.log(f"reload => {self.attacker.name} ({self.attacker.current_ammo}/{self.attacker.ammo})")
+        # intensifying magazine ramps up while firing continuously, so the bonus restarts after a reload
+        if intensifying_magazine in self.attacker.build:
+            intensifying_magazine.last_triggered = None
+        self.schedule_attack(self.current_time)
 
     def on_damage(self) -> None:
         weapon_damage = 1.0 + self.attacker.weapon_damage_bonus
@@ -147,17 +163,18 @@ class CombatSimulator:
         hero.remove_buff(buff)
         self.log(f"buff => {hero.name} loses +{buff.value * 100:.0f}% {buff.type.value}")
 
-    def stop(self) -> None:
-        self.running = False
-
     ## Simulation
 
     def run(self) -> CombatStats:
         self.apply_pre_combat_effects()
         self.schedule_attack(0.0)
 
-        while self.running and not self.event_queue.is_empty():
+        while not self.event_queue.is_empty():
             event = self.event_queue.pop()
+            if event.time > self.fight_duration:
+                # target survived the whole window, so average over all of it (reload downtime included)
+                self.current_time = self.fight_duration
+                break
             self.current_time = event.time
             event.callback()
 
