@@ -66,6 +66,10 @@ class CombatSimulator:
 
         self.attacker.distance_to_target = distance_to_target
 
+        # items are shared module-level objects, so clear timers left over from previous simulations
+        for item in self.attacker.build:
+            item.last_triggered = None
+
     def log(self, message: str, prefix: str = "*") -> None:
         if self.verbose:
             print(f"[{prefix}] {self.current_time:>5.2f}s => {message}")
