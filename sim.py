@@ -4,6 +4,9 @@ from typing import Optional
 from event import Event, EventQueue
 from items import Effect, EffectType, Item
 
+# past max range, bullets keep this fraction of their full damage
+MIN_FALLOFF_DAMAGE = 0.1
+
 
 @dataclass
 class Buff:
@@ -19,6 +22,8 @@ class Hero:
     base_bullet_damage: float
     base_fire_rate: float  # bullets per second
     base_ammo: int
+    min_range: float  # meters, falloff starts here
+    max_range: float  # meters, falloff bottoms out here
     build: list[Item] = field(default_factory=list)
 
     def __post_init__(self) -> None:
@@ -106,7 +111,7 @@ class CombatSimulator:
             elif effect.type == EffectType.FIRE_RATE:
                 self.schedule_buff(self.attacker, effect)
 
-        damage = self.attacker.base_bullet_damage * weapon_damage + flat_damage
+        damage = self.falloff_damage(weapon_damage, flat_damage)
 
         fire_rate_bonus = self.attacker.current_fire_rate() / self.attacker.base_fire_rate - 1
         self.log(f"bonus => +{(weapon_damage - 1) * 100:.0f}% weapon damage, +{fire_rate_bonus * 100:.0f}% fire rate")
@@ -116,6 +121,20 @@ class CombatSimulator:
         self.stats.total_damage += damage
         self.stats.total_attacks += 1
         self.log(f"damage => {self.defender.name} takes {damage:.2f} ({previous_health:.2f} -> {self.defender.health:.2f})")
+
+    def falloff_damage(self, weapon_damage: float, flat_damage: float) -> float:
+        # linear falloff from full damage at min range down to 10% at max range
+        # e.g. range 22-58m and target at 40m => halfway => 55% damage
+        full_damage = self.attacker.base_bullet_damage * weapon_damage + flat_damage
+        min_range, max_range = self.attacker.min_range, self.attacker.max_range
+        if self.attacker.distance_to_target < min_range:
+            return full_damage
+
+        min_damage = full_damage * MIN_FALLOFF_DAMAGE
+        slope = (min_damage - full_damage) / (max_range - min_range)
+        falloff_distance = min(self.attacker.distance_to_target, max_range) - min_range
+        # bullets always deal at least 1 damage
+        return max(1.0, full_damage + slope * falloff_distance)
 
     def schedule_buff(self, hero: Hero, effect: Effect) -> None:
         buff = hero.apply_buff(effect, self.current_time)

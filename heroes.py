@@ -11,6 +11,8 @@ def vindicta(build: Optional[list[Item]] = None) -> Hero:
         base_bullet_damage=13,
         base_fire_rate=5.26,
         base_ammo=22,
+        min_range=22,
+        max_range=58,
         build=build or [],
     )
 
@@ -23,4 +25,6 @@ def target_dummy(health: float, name: str = "Abrams") -> Hero:
         base_bullet_damage=0,
         base_fire_rate=1,
         base_ammo=1,
+        min_range=1,
+        max_range=1,
     )
