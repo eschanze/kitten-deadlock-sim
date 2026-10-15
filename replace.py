@@ -2,14 +2,14 @@ from dataclasses import dataclass
 
 from heroes import target_dummy, vindicta
 from items import (
-    ALL_ITEMS, Item,
-    basic_magazine, high_velocity_mag, hollow_point_ward, intensifying_magazine, long_range, swift_striker,
+    ALL_ITEMS, Item, has_component_conflict,
+    extended_magazine, high_velocity_rounds, intensifying_magazine, long_range, restorative_shot, swift_striker,
 )
 from sim import CombatSimulator, CombatStats
 
 TARGET_HEALTH = 5000
 
-CURRENT_BUILD = [basic_magazine, high_velocity_mag, hollow_point_ward, long_range, swift_striker, intensifying_magazine]
+CURRENT_BUILD = [extended_magazine, high_velocity_rounds, restorative_shot, long_range, swift_striker, intensifying_magazine]
 
 
 @dataclass
@@ -34,6 +34,8 @@ def find_replacements() -> list[Replacement]:
         for new_item in (item for item in candidates if item.souls >= replaced_item.souls):
             build = CURRENT_BUILD.copy()
             build[slot] = new_item
+            if has_component_conflict(build):
+                continue
             replacements.append(Replacement(replaced_item, new_item, build, simulate(build)))
 
     return replacements

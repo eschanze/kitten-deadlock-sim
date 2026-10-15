@@ -8,9 +8,9 @@ BUILD = [sharpshooter, burst_fire]
 DISTANCE = 30  # meters
 TARGET_HEALTH = 3000
 
-# how much dps is lost with a shorter max range (45m) compared to vindicta's default (58m)
+# how much dps is lost with a shorter max range (45m) compared to vindicta's default (64m)
 SHORT_MAX_RANGE = 45
-DEFAULT_MAX_RANGE = 58
+DEFAULT_MAX_RANGE = 64
 
 
 def simulate_dps(max_range: float) -> float:

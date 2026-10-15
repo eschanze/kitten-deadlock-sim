@@ -2,7 +2,7 @@ import itertools
 from dataclasses import dataclass
 
 from heroes import target_dummy, vindicta
-from items import ALL_ITEMS, Item, long_range, sharpshooter
+from items import ALL_ITEMS, Item, has_component_conflict
 from sim import CombatSimulator
 
 BUILD_SIZE = 5
@@ -13,11 +13,6 @@ TARGET_HEALTH = 3000
 
 # items already owned, the search only fills the remaining slots
 CURRENT_BUILD: list[Item] = []
-
-# sharpshooter is built from long range, so owning both makes no sense
-INCOMPATIBLE_PAIRS = [
-    (long_range, sharpshooter),
-]
 
 
 @dataclass
@@ -33,7 +28,7 @@ class BuildResult:
 
 
 def is_valid_build(build: list[Item]) -> bool:
-    if any(first in build and second in build for first, second in INCOMPATIBLE_PAIRS):
+    if has_component_conflict(build):
         return False
     starter_items = sum(1 for item in build if item.tier == 1)
     if starter_items > MAX_STARTER_ITEMS:

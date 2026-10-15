@@ -7,13 +7,13 @@ from sim import Hero
 def vindicta(build: Optional[list[Item]] = None) -> Hero:
     return Hero(
         name="Vindicta",
-        base_health=550,
-        base_bullet_damage=13,
-        base_fire_rate=5.26,
-        base_ammo=22,
-        min_range=22,
-        max_range=58,
-        base_reload_time=2.0,
+        base_health=755,
+        base_bullet_damage=12.3,
+        base_fire_rate=4.33,
+        base_ammo=19,
+        min_range=20,
+        max_range=64,
+        base_reload_time=2.91,
         build=build or [],
     )
 

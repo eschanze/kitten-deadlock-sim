@@ -1,9 +1,9 @@
 from dataclasses import dataclass, field
-from math import prod
+from math import ceil, prod
 from typing import Optional
 
 from event import Event, EventQueue
-from items import Effect, EffectType, Item, intensifying_magazine
+from items import Category, Effect, EffectType, Item, intensifying_magazine, weapon_investment_bonus
 
 # past max range, bullets keep this fraction of their full damage
 MIN_FALLOFF_DAMAGE = 0.1
@@ -31,8 +31,10 @@ class Hero:
 
     def __post_init__(self) -> None:
         self.health = self.base_health + sum(item.health for item in self.build)
-        self.weapon_damage_bonus = sum(item.total_weapon_damage for item in self.build)
-        self.ammo = round(self.base_ammo * (1 + sum(item.ammo for item in self.build)))
+        weapon_souls = sum(item.souls for item in self.build if item.category == Category.WEAPON)
+        self.weapon_damage_bonus = sum(item.weapon_damage for item in self.build) + weapon_investment_bonus(weapon_souls)
+        # extra ammo rounds up (the rounding first absorbs float noise, e.g. 19 * 1.3 => 24.700000000000003)
+        self.ammo = ceil(round(self.base_ammo * (1 + sum(item.ammo for item in self.build)), 6))
         self.current_ammo = self.ammo
         self.active_buffs: list[Buff] = []
         self.distance_to_target = 0.0  # meters
@@ -55,6 +57,11 @@ class Hero:
 
     def remove_buff(self, buff: Buff) -> None:
         self.active_buffs.remove(buff)
+
+    def falloff_range(self) -> tuple[float, float]:
+        # falloff range items stretch both ends of the range
+        scale = 1 + sum(item.falloff_range for item in self.build)
+        return self.min_range * scale, self.max_range * scale
 
     def current_fire_rate(self) -> float:
         item_bonus = sum(item.fire_rate for item in self.build)
@@ -152,9 +159,9 @@ class CombatSimulator:
 
     def falloff_damage(self, weapon_damage: float, flat_damage: float) -> float:
         # linear falloff from full damage at min range down to 10% at max range
-        # e.g. range 22-58m and target at 40m => halfway => 55% damage
+        # e.g. range 20-60m and target at 40m => halfway => 55% damage
         full_damage = self.attacker.base_bullet_damage * weapon_damage + flat_damage
-        min_range, max_range = self.attacker.min_range, self.attacker.max_range
+        min_range, max_range = self.attacker.falloff_range()
         if self.attacker.distance_to_target < min_range:
             return full_damage
 

@@ -2,10 +2,10 @@ import combinations
 import falloff
 import replace
 from heroes import target_dummy, vindicta
-from items import basic_magazine, intensifying_magazine, rapid_rounds, sharpshooter, swift_striker
+from items import extended_magazine, intensifying_magazine, restorative_shot, sharpshooter, swift_striker
 from sim import CombatSimulator
 
-SAMPLE_BUILD = [basic_magazine, rapid_rounds, swift_striker, intensifying_magazine, sharpshooter]
+SAMPLE_BUILD = [extended_magazine, restorative_shot, swift_striker, intensifying_magazine, sharpshooter]
 TARGET_HEALTH = 5000
 
 
