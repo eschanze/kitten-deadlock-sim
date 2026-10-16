@@ -8,6 +8,8 @@ from dataclasses import dataclass
 class Event:
     time: float
     callback: Callable[[], None]
+    # heapq can't remove from the middle, so cancelled events stay queued and get skipped when popped
+    cancelled: bool = False
 
 
 class EventQueue:
